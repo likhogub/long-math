@@ -35,7 +35,7 @@ class LongNumber {
         void sub(LongNumber &B, int startIndexB);
         void sub(LongNumber &A, LongNumber &B, int startIndexA, int startIndexB);
 
-        void multiply(LongNumber &LN);
+        void multiply(LongNumber &A, LongNumber &B);
 
     public:
 
@@ -136,11 +136,17 @@ class LongNumber {
             return C;
         }
 
-        LongNumber operator *= (LongNumber &LN) {
-            multiply(LN);
+        LongNumber operator *= (LongNumber &B) {
+            multiply(*this, B);
             return *this;
         }
         
+        LongNumber operator * (LongNumber &B) {
+            LongNumber C(*this);
+            multiply(C, B);
+            return C;
+        }
+
 };
 
 void LongNumber::rightShift(int n) {
@@ -153,10 +159,9 @@ void LongNumber::rightShift(int n) {
 void LongNumber::leftShift(int n) {
     for (int i = LNLength; i - n > -1; i--) 
         bitArray[i] = bitArray[i-n];
-    for (int i = n; i > -1; i--) 
+    for (int i = 0; i < n; i++) 
         bitArray[i] = 0;
 }
-
 
 void LongNumber::add(LongNumber &B) {
     this->add(*this, B);
@@ -244,11 +249,20 @@ void LongNumber::sub(LongNumber &A, LongNumber &B, int startIndexA, int startInd
     }
 }
 
-void LongNumber::multiply(LongNumber &B) {
+void LongNumber::multiply(LongNumber &A, LongNumber &B) {
+    LongNumber _A(A);
+    LongNumber _B(B);
     LongNumber C;
+
+    cout << "_A: " << _A.toBinaryString(0, LNLength) << " " << _A.toInteger(0, LNLength) << endl;
+    cout << "_C: " << C.toBinaryString(0, LNLength) << " " << C.toInteger(0, LNLength) << endl;
+
     for (int i = 0; i < LNLength + 1; i++) {
-        if (B.bitArray[i]) 
-            C.add(C, B, i, i);
+        if (B.bitArray[i]) C.add(_A);
+        _A <<=1;
+        _B >>= 1;
+        cout << "_A: " << _A.toBinaryString(0, LNLength) << " " << _A.toInteger(0, LNLength) << endl;
+        cout << "_C: " << C.toBinaryString(0, LNLength) << " " << C.toInteger(0, LNLength) << endl;
     }
-    copyArrayFrom(C);
+    A = C;
 }
