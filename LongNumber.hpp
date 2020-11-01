@@ -1,4 +1,4 @@
-#define LNLength 64
+#define LNLength 2048
 #include <iostream>
 using namespace std;
 
@@ -36,29 +36,40 @@ class LongNumber {
         void sub(LongNumber &A, LongNumber &B, int startIndexA, int startIndexB);
 
         void multiply(LongNumber &A, LongNumber &B);
+        
+        void AND(LongNumber &A, LongNumber &B);
+        void OR(LongNumber &A, LongNumber &B);
+        void XOR(LongNumber &A, LongNumber &B);
+
+        void copyFromUsualNumber(long long number) {
+            for (int i = 0; i < LNLength + 1; i++) {
+                bitArray[i] = number%2;
+                number /= 2;
+            }
+        }
 
     public:
 
         LongNumber(){};
 
+        LongNumber(long long number) {
+            copyFromUsualNumber(number);
+        }
 
         LongNumber(const LongNumber &LN) {
             copyArrayFrom(LN);
         }
 
-
         bool& operator [] (int i) {
             return bitArray[i];
         }
-
 
         LongNumber operator = (LongNumber LN) {
             copyArrayFrom(LN);
             return *this;
         }
         
-
-        char* toBinaryString(int startIndex=0, int n=LNLength) {
+        char* toBinary(int startIndex=0, int n=LNLength) {
             char* str = new char[n+1];
             for (int i = startIndex; i < n; i++) {
                 str[i] = bitArray[i] + 48;
@@ -67,6 +78,20 @@ class LongNumber {
             return str;
         }
 
+        char* toHex(int startIndex=0, int n=LNLength/4) {
+            char* str = new char[n+1];
+            char ABC[] = "0123456789ABCDEF";
+            for (int i = startIndex; i < n; i++) {
+                int index = 0;
+                index += bitArray[4*i];
+                index += bitArray[4*i+1]*2;
+                index += bitArray[4*i+2]*4;
+                index += bitArray[4*i+3]*8;
+                str[i] = ABC[index];
+            }
+            str[n] = 0;
+            return str;
+        }
 
         long long toInteger(int startIndex=0, int n=LNLength) {
             long long s;
@@ -85,24 +110,23 @@ class LongNumber {
             return s;
         }
 
-
-        LongNumber operator += (LongNumber &LN) {
+        LongNumber operator += (LongNumber LN) {
             add(LN);
             return *this;
         }
 
-        LongNumber operator + (LongNumber &LN) {
+        LongNumber operator + (LongNumber LN) {
             LongNumber C(*this);
             C += LN;
             return C;
         }
 
-        LongNumber operator -= (LongNumber &LN) {
+        LongNumber operator -= (LongNumber LN) {
             sub(LN);
             return *this;
         }
 
-        LongNumber operator - (LongNumber &LN) {
+        LongNumber operator - (LongNumber LN) {
             LongNumber C(*this);
             C -= LN;
             return C;
@@ -136,15 +160,70 @@ class LongNumber {
             return C;
         }
 
-        LongNumber operator *= (LongNumber &B) {
+        LongNumber operator *= (LongNumber B) {
             multiply(*this, B);
             return *this;
         }
         
-        LongNumber operator * (LongNumber &B) {
+        LongNumber operator * (LongNumber B) {
             LongNumber C(*this);
             multiply(C, B);
             return C;
+        }
+
+        LongNumber operator &= (LongNumber B) {
+            AND(*this, B);
+            return *this;
+        }
+
+        LongNumber operator & (LongNumber B) {
+            LongNumber C(*this);
+            AND(C, B);
+            return C;
+        }
+
+        LongNumber operator |= (LongNumber B) {
+            OR(*this, B);
+            return *this;
+        }
+
+        LongNumber operator | (LongNumber B) {
+            LongNumber C(*this);
+            OR(C, B);
+            return C;
+        }
+
+        LongNumber operator ^= (LongNumber B) {
+            XOR(*this, B);
+            return *this;
+        }
+
+        LongNumber operator ^ (LongNumber B) {
+            LongNumber C(*this);
+            XOR(C, B);
+            return C;
+        }
+
+        int highestBitWith(bool valueToFind=true) {
+            for (int i = LNLength; i > -1; i--) 
+                if (bitArray[i] == valueToFind)
+                    return i;
+            return 0;
+        }
+
+        int leastBitWith(bool valueToFind=false) {
+            for (int i = 0; i < LNLength + 1; i++) 
+                if (bitArray[i] == valueToFind)
+                    return i;
+            return 0;
+        }
+
+        int countBitsWith(bool valueToCount=true) {
+            int counter = 0;
+            for (int i = 0; i < LNLength + 1; i++) 
+                if (bitArray[i] == valueToCount) 
+                    counter++;
+            return counter;
         }
 
 };
@@ -162,6 +241,7 @@ void LongNumber::leftShift(int n) {
     for (int i = 0; i < n; i++) 
         bitArray[i] = 0;
 }
+
 
 void LongNumber::add(LongNumber &B) {
     this->add(*this, B);
@@ -254,15 +334,30 @@ void LongNumber::multiply(LongNumber &A, LongNumber &B) {
     LongNumber _B(B);
     LongNumber C;
 
-    cout << "_A: " << _A.toBinaryString(0, LNLength) << " " << _A.toInteger(0, LNLength) << endl;
-    cout << "_C: " << C.toBinaryString(0, LNLength) << " " << C.toInteger(0, LNLength) << endl;
-
     for (int i = 0; i < LNLength + 1; i++) {
-        if (B.bitArray[i]) C.add(_A);
+        if (_B.bitArray[0]) 
+            C.add(_A);
         _A <<=1;
         _B >>= 1;
-        cout << "_A: " << _A.toBinaryString(0, LNLength) << " " << _A.toInteger(0, LNLength) << endl;
-        cout << "_C: " << C.toBinaryString(0, LNLength) << " " << C.toInteger(0, LNLength) << endl;
     }
     A = C;
 }
+
+void LongNumber::AND(LongNumber &A, LongNumber &B) {
+    for (int i = 0; i < LNLength + 1; i++) {
+        A.bitArray[i] &= B.bitArray[i];
+    }
+}
+
+void LongNumber::OR(LongNumber &A, LongNumber &B) {
+    for (int i = 0; i < LNLength + 1; i++) {
+        A.bitArray[i] |= B.bitArray[i];
+    }
+}
+
+void LongNumber::XOR(LongNumber &A, LongNumber &B) {
+    for (int i = 0; i < LNLength + 1; i++) {
+        A.bitArray[i] ^= B.bitArray[i];
+    }
+}
+
