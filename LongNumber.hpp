@@ -5,23 +5,27 @@ using namespace std;
 class LongNumber {
     private:
         bool bitArray[LNLength + 1] = {0};
-        void copyArrayFrom(LongNumber &LN) {
-            for (int i = 0; i < LNLength; i++)
+
+        void copyArrayFrom(const LongNumber &LN) {
+            for (int i = 0; i < LNLength + 1; i++)
                 bitArray[i] = LN.bitArray[i];
         }
-        
 
         //Add B to this
         void add(LongNumber &B);
+
         //Add B to A 
         void add(LongNumber &A, LongNumber &B);
+
         //Add B with indexB to this
         void add(LongNumber &B, int startIndexB);
+
         //Add B (from indexB) to A (from indexA)
         void add(LongNumber &A, LongNumber &B, int startIndexA, int startIndexB);
 
         //Shift number to N positions
         void rightShift(int n);
+
         //Shift number to N positions
         void leftShift(int n);
 
@@ -37,23 +41,22 @@ class LongNumber {
 
         LongNumber(){};
 
-        LongNumber(LongNumber &LN) {
+
+        LongNumber(const LongNumber &LN) {
             copyArrayFrom(LN);
         }
+
 
         bool& operator [] (int i) {
             return bitArray[i];
         }
 
-        LongNumber operator = (LongNumber &LN) {
-            copyArrayFrom(LN);
-            return *this;
-        }
-        
+
         LongNumber operator = (LongNumber LN) {
             copyArrayFrom(LN);
             return *this;
         }
+        
 
         char* toBinaryString(int startIndex=0, int n=LNLength) {
             char* str = new char[n+1];
@@ -64,14 +67,14 @@ class LongNumber {
             return str;
         }
 
+
         long long toInteger(int startIndex=0, int n=LNLength) {
             long long s;
             long long m;
             if (bitArray[LNLength]) {
                 m = -1;
                 s = -1;
-            }
-            else { 
+            } else { 
                 m = 1;
                 s = 0;
             } 
@@ -82,9 +85,27 @@ class LongNumber {
             return s;
         }
 
+
         LongNumber operator += (LongNumber &LN) {
             add(LN);
             return *this;
+        }
+
+        LongNumber operator + (LongNumber &LN) {
+            LongNumber C(*this);
+            C += LN;
+            return C;
+        }
+
+        LongNumber operator -= (LongNumber &LN) {
+            sub(LN);
+            return *this;
+        }
+
+        LongNumber operator - (LongNumber &LN) {
+            LongNumber C(*this);
+            C -= LN;
+            return C;
         }
 
         LongNumber operator >>= (int n) {
@@ -95,6 +116,12 @@ class LongNumber {
             return *this;
         }
 
+        LongNumber operator >> (int n) {
+            LongNumber C(*this);
+            C >>= n;
+            return C;
+        }
+
         LongNumber operator <<= (int n) {
             if (n < 0)
                 rightShift(-n);
@@ -103,15 +130,14 @@ class LongNumber {
             return *this;
         }
 
-        
-        LongNumber operator -= (LongNumber &LN) {
-            sub(LN);
-            return *this;
+        LongNumber operator << (int n) {
+            LongNumber C(*this);
+            C <<= n;
+            return C;
         }
-        
-        
+
         LongNumber operator *= (LongNumber &LN) {
-            //multiplyToArray(LN);
+            multiply(LN);
             return *this;
         }
         
@@ -218,3 +244,11 @@ void LongNumber::sub(LongNumber &A, LongNumber &B, int startIndexA, int startInd
     }
 }
 
+void LongNumber::multiply(LongNumber &B) {
+    LongNumber C;
+    for (int i = 0; i < LNLength + 1; i++) {
+        if (B.bitArray[i]) 
+            C.add(C, B, i, i);
+    }
+    copyArrayFrom(C);
+}
